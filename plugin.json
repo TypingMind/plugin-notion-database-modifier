@@ -1,0 +1,306 @@
+{
+    "uuid": "7b84b0dc-6f2b-4b94-8dc2-9a3bb2f17425",
+    "id": "perform_notion_database_actions",
+    "emoji": "🧩",
+    "title": "Notion Database Modifier",
+    "overviewMarkdown": "# **Notion Database Modifier**\nThis plugin enables users to perform operations on Notion database pages, including creation, updates, and deletions.\n\n### 📝 **User Setting Notes:**\n#### 🔧 **Set Up the Plugin Server:**\n- A plugin server must be set up to use this feature. Follow the detailed guide to set up a plugin server on Render: [How to Deploy the Plugin Server on Render](https://docs.typingmind.com/plugins/plugins-server/how-to-deploy-plugins-server-on-render)\n\n#### 🔑 **Set Up Your Notion API Key:**\n- Go to the [Notion Integration Page](https://www.notion.so/profile/integrations) and create a new integration.\n- Copy the key from the Integration Detail Page.\n- Paste the key into the plugin's user settings: \n  **Notion API Key:** `ntn_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`\n\nFor detailed instructions, visit the [Notion Integration API Documentation](https://developers.notion.com/docs/create-a-notion-integration)\n\n#### 🔗 **Share Your Database with the Integration:**\n- Open your database in Notion.\n- Click the **“Share”** button in the top right.\n- Select **“Invite”**, search for your integration name, and click **“Invite”** to grant access.\n\nFor detailed instructions, visit the [Notion API Connections Documentation](https://www.notion.com/help/add-and-manage-connections-with-the-api)\n\n### 📌 **Important Notes:**\n\n#### 👉 **Database Context Requirement:**\nTo use the plugin, you need to tell the AI your database ID along with the database structure at the beginning.\n\n##### 1. Obtain Your Database ID\n- To get the database ID, open your Notion database as a full page in your browser.\n- Copy the full URL from the address bar. The URL will look something like this: `https://www.notion.so/<DATABASE_ID>?v=<VIEW_ID>`\n- Example URL `https://www.notion.so/12345bcxyz?v=11111aaaaaa`. The **Database ID** is: `12345bcxyz`.\n\n##### 2. Obtain Your Database Structure\n- Manually list out each property, including Name, Type, and Options (Select, Multi-select, Status).\n- Use the [Notion Database Structure Viewer plugin](https://github.com/TypingMind/plugin-notion-database-structure-viewer).\n\n#### ⚠️ **Limitations:**\n- The plugin does **not support** the following property types for modification: Relation, Rollup, Verification, Formula, Unique ID.\n- The **files** property type only supports external URLs. When updating the file property, its value will be overwritten by the array of files provided. For more details, refer to the [Notion Property Value Page](https://developers.notion.com/reference/page-property-values#files)\n\n#### 👉 **Rate Limits:**\n- There are rate limits for Notion API requests. Learn more at [Notion API Rate Limits](https://developers.notion.com/reference/request-limits#rate-limits).\n- There are size limits on certain parameters, as well as the depth of children in requests. Learn more at [Notion API Size Limits](https://developers.notion.com/reference/request-limits#size-limits)\n\n### 💡 **Example Usage**  \n- As an HR professional, I want to modify my company's employee directory. First, I need to provide the AI with the context of my database, including the database URL along with the database structure description.\n\nGiven the description of my Employee Directory Database as follows: \n> Notion Database URL: `https://www.notion.so/12345bcxyz?v=11111aaaaaa`\n>\n> Database Structure:\n> 1. Name (Title)\n> 2. Years of Experience (Number)\n> 3. Skills (Multi-select) - Options: Project Management, Programming, Data Analysis, Communication, Leadership, Design, Marketing, Sales, MLOps, FullStack\n> 4. Probation Passed (Checkbox)\n> 5. Location (Select) - Options: HQ - New York, Office - London, Office - Singapore, Remote - Domestic, Remote - International, Hybrid, Office - New York\n> 6. Role (Select) - Options: Engineer, Manager, Designer, Analyst, Developer, Director, Coordinator, Specialist\n> 7. LinkedIn Profile (URL)\n> 8. Performance Review Status (Status) - Options: Not started, In progress, Done\n> 9. Email (Email)\n> 10. Start Date (Date)\n> 11. Department (Select) - Options: Engineering, Marketing, Sales, HR, Finance, Operations, Customer Support, Design\n> 12. Attachments (Files)\n> 13. Phone (Phone Number)\n> 14. Notes (Rich Text)\n\nThen, I can ask the AI to modify the Notion database based on my needs. Here are some examples:\n\nExample 1: create a new employee\n> Please create a new employee record for Dat Tran with the following details:\n> Years of Experience: 5\n> Skills: Project Management, Data Analysis, Leadership\n> Location: Office - Vietnam\n> Role: Developer\n> Email: dat.tran@email.com\n> Start Date: 2024-06-15\n> Department: Engineering\n> Phone: +44 20 7946 0958\n> Notes: Strong leadership and problem-solving skills with a focus on system architecture.\n\nExample 2: Update an existing employee\n> Update the Name to Dylan Tran and Linkedin to https://www.linkedin.com/in/dylantransample\n\nExample 3: Remove an employee by name\n> Remove Employee Name “Dylan Tran”",
+    "openaiSpec": {
+        "name": "perform_notion_database_actions",
+        "description": "Perform operations on a Notion database rows, including create, update, and archive. Provide the Notion Database Structure to use this function.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "operation": {
+                    "type": "string",
+                    "description": "The operation to perform: create, update, or archive.",
+                    "enum": [
+                        "create",
+                        "update",
+                        "archive"
+                    ]
+                },
+                "databaseId": {
+                    "type": "string",
+                    "description": "The ID of the Notion database for create and read operations."
+                },
+                "pageId": {
+                    "type": "string",
+                    "description": "The ID of the page for update and archive operations."
+                },
+                "databaseStructure": {
+                    "type": "array",
+                    "description": "A list of properties from the Notion database structure, focusing on related properties used for creation or updating criteria. There's no need to include all properties.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "The name of the property."
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "The type of the property.",
+                                "enum": [
+                                    "title",
+                                    "number",
+                                    "multi_select",
+                                    "select",
+                                    "checkbox",
+                                    "url",
+                                    "status",
+                                    "email",
+                                    "date",
+                                    "files",
+                                    "phone_number",
+                                    "rich_text"
+                                ]
+                            },
+                            "options": {
+                                "type": "array",
+                                "description": "List of options for select, multi-select, and status properties.",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "description": "Name of the option."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "notionProperties": {
+                    "type": "array",
+                    "description": "An array of property objects to define the page's properties following Notion's property schema. This field is required when operation is 'create' or 'update'. Otherwise, it should be empty array.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "propertyName": {
+                                "type": "string",
+                                "description": "The name of the property."
+                            },
+                            "propertyType": {
+                                "type": "string",
+                                "description": "The type of the property (title,rich_text,number,select,status,multi_select,date,URL,email,phone_number, checkbox, files, status)."
+                            },
+                            "value": {
+                                "description": "The value of the property, flexible based on the property type defined in Notion's property schema",
+                                "oneOf": [
+                                    {
+                                        "type": "array",
+                                        "description": "For title or rich_text properties.",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "const": "text",
+                                                    "description": "Type of the content, should always be 'text'."
+                                                },
+                                                "text": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "content": {
+                                                            "type": "string",
+                                                            "description": "The content of the text block."
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "content"
+                                                    ]
+                                                },
+                                                "annotations": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "italic": {
+                                                            "type": "boolean",
+                                                            "default": false,
+                                                            "description": "Indicates if the text is italicized. Default is false."
+                                                        },
+                                                        "bold": {
+                                                            "type": "boolean",
+                                                            "default": false,
+                                                            "description": "Indicates if the text is bolded. Default is false."
+                                                        },
+                                                        "color": {
+                                                            "type": "string",
+                                                            "default": "default",
+                                                            "description": "The color of the text. Default is 'default'."
+                                                        },
+                                                        "strikethrough": {
+                                                            "type": "boolean",
+                                                            "default": false,
+                                                            "description": "Indicates if the text has a strikethrough. Default is false."
+                                                        },
+                                                        "underline": {
+                                                            "type": "boolean",
+                                                            "default": false,
+                                                            "description": "Indicates if the text is underlined. Default is false."
+                                                        }
+                                                    },
+                                                    "default": {
+                                                        "italic": false,
+                                                        "bold": false,
+                                                        "color": "default",
+                                                        "strikethrough": false,
+                                                        "underline": false
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "type",
+                                                "text"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "number",
+                                        "description": "For number properties."
+                                    },
+                                    {
+                                        "type": "object",
+                                        "description": "For select properties.",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "name"
+                                        ]
+                                    },
+                                    {
+                                        "type": "array",
+                                        "description": "For multi_select properties.",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "name"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "description": "For date properties (single or range).",
+                                        "properties": {
+                                            "start": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "end": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "time_zone": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "start"
+                                        ]
+                                    },
+                                    {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "For URL properties."
+                                    },
+                                    {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "For email properties."
+                                    },
+                                    {
+                                        "type": "string",
+                                        "description": "For phone_number properties."
+                                    },
+                                    {
+                                        "type": "boolean",
+                                        "description": "For checkbox properties. A checkbox indicating true or false."
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string",
+                                                "description": "The name of the status, e.g., 'Not started', 'In progress', or 'Complete'."
+                                            }
+                                        },
+                                        "description": "For status properties. A status indicating the item's current progress."
+                                    },
+                                    {
+                                        "type": "array",
+                                        "description": "For files properties. A list of file attachments.",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "description": "The name of the file."
+                                                },
+                                                "external": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "url": {
+                                                            "type": "string",
+                                                            "format": "uri",
+                                                            "description": "The external URL of the file."
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "url"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "name",
+                                                "external"
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        "required": [
+                            "propertyName",
+                            "propertyType",
+                            "value"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "databaseId",
+                "operation",
+                "databaseStructure"
+            ]
+        }
+    },
+    "userSettings": [
+        {
+            "name": "pluginServer",
+            "label": "Plugin Server",
+            "required": true,
+            "description": "The URL of the plugin server. For more details, refer to the documentation: https://docs.typingmind.com/plugins/plugins-server",
+            "placeholder": "https://...."
+        },
+        {
+            "name": "notionApiKey",
+            "label": "Notion API Key",
+            "description": "Enter your Notion Secret Key. You can create an integration from Notion at https://www.notion.so/profile/integrations",
+            "required": true
+        }
+    ],
+    "code": "/**\n * Perform a CRUD operation on a Notion database.\n * @param {Object} params - The parameters for the operation.\n * @param {string} params.operation - The CRUD operation to perform: create, read, update, or archive.\n * @param {string} [params.databaseId] - The ID of the Notion database for create and read operations.\n * @param {Array} [params.databaseStructure] - A list of properties in the Notion database structure, used to generate filter or sort criteria..\n * @param {string} [params.pageId] - The ID of the page for update and archive operations.\n * @param {Object} [params.notionProperties] - The properties for create or update operations.\n * @returns {Promise<Object>} - The response data from the Notion API.\n */\nasync function perform_notion_database_actions(params, userSettings) {\n  const { databaseId, operation, databaseStructure = [] } = params;\n  const { pluginServer, notionApiKey } = userSettings;\n\n  if (!pluginServer) {\n    throw new Error(\n      \"Missing the Plugin Server URL. Please set it in the plugin settings.\"\n    );\n  }\n\n  if (!notionApiKey) {\n    throw new Error(\n      \"Missing the Notion API Key. Please set it in the plugin settings.\"\n    );\n  }\n\n  const baseConfigs = {\n    pluginServerUrl: pluginServer,\n    notionApiKey: notionApiKey,\n  };\n  try {\n    switch (operation) {\n      case \"create\":\n        if (!databaseId) {\n          throw new Error(\n            \"Missing the Database Id. Please set it in the plugin settings.\"\n          );\n        }\n        \n        if (!databaseStructure.length) {\n          throw new Error(\n            \"Missing the Database Structure Properties. Please provide valid structure of your provided database.\"\n          );\n        }\n\n        return createPage({\n          ...baseConfigs,\n          databaseId: databaseId,\n          databaseStructure: databaseStructure,\n          properties: params.notionProperties ?? [],\n        });\n\n      case \"update\":\n        if (!params.pageId) {\n          throw new Error(\"Page id is required for update action\");\n        }\n\n        if (!databaseStructure.length) {\n          throw new Error(\n            \"Missing the Database Structure Properties. Please provide valid structure of your provided database.\"\n          );\n        }\n\n        return updatePage({\n          ...baseConfigs,\n          pageId: params.pageId,\n          databaseStructure: databaseStructure,\n          properties: params.notionProperties ?? [],\n        });\n      case \"archive\":\n        if (!params.pageId) {\n          throw new Error(\"Page id is required for delete action\");\n        }\n        return archivePage({\n          ...baseConfigs,\n          pageId: params.pageId,\n        });\n      default:\n        throw new Error(\"Invalid operation type.\");\n    }\n  } catch (error) {\n    return { error: error.message };\n  }\n}\n\nasync function createPage({\n  notionApiKey,\n  pluginServerUrl,\n  databaseId,\n  properties,\n  databaseStructure,\n}) {\n  const requestBody = {\n    notionApiKey: notionApiKey,\n    databaseId: databaseId,\n    properties: properties,\n    databaseStructure: databaseStructure,\n  };\n\n  try {\n    const response = await fetch(\n      `${pluginServerUrl}/notion-database/create-page`,\n      {\n        method: \"POST\",\n        headers: {\n          \"Content-Type\": \"application/json\",\n        },\n        body: JSON.stringify(requestBody),\n      }\n    );\n\n    if (!response.ok) {\n      throw new Error(`Error create page: ${response.statusText}`);\n    }\n\n    const data = await response.json();\n    console.log(JSON.stringify(data));\n    return data;\n  } catch (error) {\n    throw new Error(`Failed to create page: ${error.message}`);\n  }\n}\n\nasync function updatePage({\n  notionApiKey,\n  pluginServerUrl,\n  pageId,\n  properties,\n  databaseStructure,\n}) {\n  const requestBody = {\n    notionApiKey: notionApiKey,\n    pageId: pageId,\n    properties: properties,\n    databaseStructure: databaseStructure,\n  };\n\n  try {\n    const response = await fetch(\n      `${pluginServerUrl}/notion-database/update-page`,\n      {\n        method: \"POST\",\n        headers: {\n          \"Content-Type\": \"application/json\",\n        },\n        body: JSON.stringify(requestBody),\n      }\n    );\n\n    if (!response.ok) {\n      throw new Error(`Error update page: ${response.statusText}`);\n    }\n\n    const data = await response.json();\n    console.log(JSON.stringify(data));\n    return data;\n  } catch (error) {\n    throw new Error(`Failed to update page: ${error.message}`);\n  }\n}\n\nasync function archivePage({ notionApiKey, pluginServerUrl, pageId }) {\n  const requestBody = {\n    notionApiKey: notionApiKey,\n    pageId: pageId,\n  };\n\n  try {\n    const response = await fetch(\n      `${pluginServerUrl}/notion-database/archive-page`,\n      {\n        method: \"POST\",\n        headers: {\n          \"Content-Type\": \"application/json\",\n        },\n        body: JSON.stringify(requestBody),\n      }\n    );\n\n    if (!response.ok) {\n      throw new Error(`Error archive page: ${response.statusText}`);\n    }\n\n    const data = await response.json();\n    console.log(JSON.stringify(data));\n    return data;\n  } catch (error) {\n    throw new Error(`Failed to archive page: ${error.message}`);\n  }\n}",
+    "iconURL": "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/notion.png",
+    "authenticationType": "AUTH_TYPE_NONE",
+    "implementationType": "javascript",
+    "oauthConfig": null,
+    "outputType": "respond_to_ai"
+}
